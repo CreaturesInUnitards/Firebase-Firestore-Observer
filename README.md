@@ -3,24 +3,25 @@ Framework/Library-agnostic convenience for setting listeners on a collection
 
 ## USAGE
 
-[Set yourself up a Firebase Cloud Firestore project.](https://console.firebase.google.com/)
+If you haven't already, [get yourself a Firebase account and set up a Cloud Firestore project.](https://console.firebase.google.com/)
 
-You'll need to have your firebase app initialized, e.g.
-```js
-
-firebase.initializeApp({
-    apiKey: YOUR_API_KEY,
-    authDomain: YOUR_AUTH_DOMAIN,
-    projectId: YOUR_PROJECT_ID
-})
-
-
+You'll need to have firebase installed and your firebase app initialized, e.g.
+```html
+<script src="https://www.gstatic.com/firebasejs/4.9.0/firebase.js"></script>
+<script src="https://www.gstatic.com/firebasejs/4.9.0/firebase-firestore.js"></script>
+<script>
+    firebase.initializeApp({
+        apiKey: YOUR_API_KEY,
+        authDomain: YOUR_AUTH_DOMAIN,
+        projectId: YOUR_PROJECT_ID
+    })
+</script>
 ```
 
 Then you just need:
 1. FBObserve somewhere
-1. a local container to hold your collection data
-2. a CRUD function which accepts a firebase ```change``` object and returns a Promise
+2. A local container to hold your collection data
+3. A CRUD function which accepts a firebase ```change``` object and returns a Promise. This function must feature the branching logic for handling the 3 mutation types: 'added', 'modified', and 'removed'.
 
 
 ## EXAMPLE
