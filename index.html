@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<script src="https://www.gstatic.com/firebasejs/4.9.0/firebase.js"></script>
+	<script src="https://www.gstatic.com/firebasejs/4.9.0/firebase-firestore.js"></script>
+	<script>
+		/***********************************************************************/
+		/******************     YOUR FIREBASE STUFF HERE     *******************/
+		/***********************************************************************/
+
+		firebase.initializeApp({
+			apiKey: "YOUR_API_KEY",
+			authDomain: "YOUR_AUTH_DOMAIN",
+			projectId: "YOUR_PROJECT_ID"
+		})
+
+		/***********************************************************************/
+		/***********************************************************************/
+		/***********************************************************************/
+	</script>
+	<meta charset="UTF-8">
+	<title>firebase POC</title>
+	<style>
+		body { padding: 50px }
+		#wrapper { display: flex; justify-content: center; flex-wrap: wrap }
+		.app { padding: 20px; border: 1px solid black; margin: 20px }
+		h2 { text-align: center }
+	</style>
+</head>
+<body>
+	<div id="wrapper">
+		<div class="app" id="mithril"></div>
+		<div class="app" id="react"></div>
+		<div class="app" id="vanilla"></div>
+	</div>
+	<script src="https://unpkg.com/mithril@1.1.6/mithril.min.js"></script>
+	<script src="https://unpkg.com/react@16.0.0/umd/react.production.min.js"></script>
+	<script src="https://unpkg.com/react-dom@16.0.0/umd/react-dom.production.min.js"></script>
+	<script src="https://unpkg.com/babel-standalone@6.26.0/babel.min.js"></script>
+	<script type="text/babel">
+		const FBObserve = (collectionName, crudFn, redrawFn) => firebase.firestore().collection(collectionName)
+			.onSnapshot((snap) => {
+				snap.docChanges.forEach((change) => {
+					(new Promise((resolve) => { crudFn(change).then(resolve) }))
+					.then(redrawFn).catch((e) => console.log(e, 'Your CRUD function must return a promise.'))
+				})
+			})
+
+		const State = {
+			crud: (change) => {
+				if (change && change.type) {
+					const id = change.doc.id
+					const data = change.doc.data()
+					const existing = State.existingThing(id)
+					
+					switch (change.type) {
+						case 'added': {
+							if (!existing) {
+								State.things.push({key: id, data: data})
+								State.sortThings()
+							}
+							break
+						}
+						case 'modified': {
+							if (existing) {
+								State.things[State.things.indexOf(existing)].data = data
+								State.sortThings()
+							}
+							break
+						}
+						case 'removed': {
+							if (existing) {
+								State.things.splice(State.things.indexOf(existing), 1)
+							}
+						}
+					}
+				}
+				return new Promise((r) => r())
+			},
+			things: [],
+			sortThings: () => State.things.sort((a, b) => a.data.timestamp < b.data.timestamp ? -1 : a.data.timestamp > b.data.timestamp ? 1 : 0),
+			existingThing: (key) => State.things.find((thing) => thing.key === key),
+			addThing: () => firebase.firestore().collection('Things')
+				.add({ name: 'new thing', timestamp: Date.now() })
+				.catch((e) => console.log('error', e)),
+			removeThing: (key) => {
+				if (confirm(`Delete thing ${key}?`)) {
+					firebase.firestore().collection('Things').doc(key)
+						.delete()
+						.catch((e) => console.log("error deleting ", key))
+				}
+			},
+			updateThing: (key, newName) => firebase.firestore().collection('Things').doc(key)
+				.update({ name: newName })
+				.then(()=> console.log('updated'))
+				.catch((e) => console.log("error updating ", key)),
+		}
+		
+		// mithril
+		const Mithril_App = {
+			oncreate: () => {
+				FBObserve( 'Things', State.crud, m.redraw )
+			},
+			view: function(){
+				return [
+					, m('h2', 'Mithril')
+					, m('button', { onclick: State.addThing.bind(null, 'Things') }, '+ new thing')
+					, State.things.map((thing) =>
+						m('.thing'
+							, { key: thing.key }
+							, m('input[type=text]'
+								, {
+									value: thing.data.name,
+									onblur: m.withAttr('value', (v) => State.updateThing(thing.key, v))
+								}
+							)
+							, m('button', { onclick: State.removeThing.bind(null, thing.key) }, 'x')
+						)
+					)
+				]
+			}
+		}
+		
+		// react
+		const redrawReact = () => ReactDOM.render(<React_App />, document.getElementById('react'))
+		class OnChange_Input extends React.Component {
+			state = { typed: this.props.obj.data.name }
+			componentWillReceiveProps(props){
+				this.setState({ typed: props.obj.data.name })
+			}
+			onInput(e){	this.setState({ typed: e.target.value }) }
+			onBlur(e){
+				State.updateThing(this.props.obj.key, e.target.value)
+			}
+			render() {
+				return <input type="text" 
+				              value={ this.state.typed } 
+				              onInput={ this.onInput.bind(this) } 
+				              onBlur={ this.onBlur.bind(this) } />
+			}
+		}
+		class React_App extends React.Component {
+			componentDidMount(){
+				FBObserve( 'Things', State.crud, redrawReact )
+			}
+			render(){
+				return <div>
+					<h2>React</h2>
+					<button onClick={ State.addThing.bind(null, 'Things') }>+ new thing</button>
+					{ State.things.map((thing) => {
+						return <div className="thing" key="{thing.key}">
+							<OnChange_Input obj={thing} />
+							<button onClick={ State.removeThing.bind(null, thing.key) }>x</button>
+						</div>
+					}) }
+				</div>
+			}
+		}
+
+		// vanilla
+		(function () {
+			const vanilla = document.getElementById('vanilla')
+			const h2 = document.createElement('h2')
+			h2.textContent = 'Vanilla'
+			vanilla.appendChild(h2)
+			const addButton = document.createElement('button')
+			addButton.textContent = '+ new thing'
+			addButton.onclick = State.addThing.bind(null, 'Things')
+			vanilla.appendChild(addButton)
+			const wrapper = document.createElement('div')
+			vanilla.appendChild(wrapper)
+			
+			const updateTheView = () => {
+				wrapper.innerHTML = ''
+				State.things.forEach((thing) => {
+					const el = document.createElement('div')
+					el.className = 'thing'
+					const input = document.createElement('input')
+					input.type = 'text'
+					input.value = thing.data.name
+					input.onchange = (e) => State.updateThing(thing.key, e.target.value)
+					el.appendChild(input)
+					const deleter = document.createElement('button')
+					deleter.textContent = 'x'
+					deleter.onclick = State.removeThing.bind(null, thing.key)
+					el.appendChild(deleter)
+					wrapper.appendChild(el)
+				})
+			}
+			FBObserve( 'Things', State.crud, updateTheView )
+			window.renderVanilla = updateTheView
+		})()
+		
+		// get everybody home
+		m.mount(document.getElementById('mithril'), Mithril_App)
+		redrawReact()
+		renderVanilla()
+	</script>
+	
+</script>
+</body>
+</html>
