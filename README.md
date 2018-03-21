@@ -3,12 +3,6 @@ Framework/Library-agnostic convenience for setting listeners on a collection, de
 
 ## USAGE
 
- ```js
-
-FBObserve(collectionName, target, options)
-
- ```
-
 If you haven't already, [get yourself a Firebase account and set up a Cloud Firestore project.](https://console.firebase.google.com/)
 
 You'll need to have firebase installed and your firebase app initialized, e.g.
@@ -111,7 +105,7 @@ FBObserve(
 | :-------- | :-------- | :---------- |
 | redrawFn | Function | non-Mithril redraw function |
 | condition | Array | query condition arguments, e.g.`[ 'id', '==', myUserId  ]` |
-| crudFn | Function | custom CRUD operations |
+| crudFn | Function | custom CRUD operations, see "Custom Example" above |
 | callback | Function | deferred operation to run after CRUD |
 
 ## DEMO
