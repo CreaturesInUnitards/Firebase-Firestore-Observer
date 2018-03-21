@@ -110,6 +110,10 @@ FBObserve(
 
 ## DEMO
 
+##### _this won't work unless you get yourself a firestore project_
+
 [Firebase-Firestore-Observer at flems.io](https://tinyurl.com/ycyxrzo5)
+
+##### _no, *seriously*, you need a project and its config to see this working_
 
 A single dataset is used in 3 different approaches: MithrilJS, ReactJS, and VanillaJS. Each features its own implementations of view and redraw, and has its own local datastore, and each is updated properly when anything happens in the cloud. I'm not gonna host your data, so if you want to see this working [you need to set yourself up a firebase-firestore project](https://console.firebase.google.com/) and enter your own firebase initialization values.
