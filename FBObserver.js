@@ -42,7 +42,7 @@ const FBObserve = (collectionName, target, options) => {
 			case 'removed': {
 				if (existing) {
 					if (isArray) targetObj.splice(targetObj.indexOf(existing), 1)
-					else delete existing
+					else delete targetObj[prop || id]
 				}
 			}
 		}
