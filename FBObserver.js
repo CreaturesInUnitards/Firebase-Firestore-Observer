@@ -1,10 +1,54 @@
-const FBObserve = (collectionName, crudFn, redrawFn) => firebase.firestore().collection(collectionName)
-    .onSnapshot((snap) => {
-        snap.docChanges.forEach((change) => {
-            (new Promise((resolve) => { crudFn(change).then(resolve) }))
-            .then(redrawFn).catch((e) => console.log(e, 'Your CRUD function must return a promise.'))
-        })
-    })
+const FBObserve = (collectionName, target, options) => {
+	const targetObj = typeof target.FBLocalCollection == 'undefined' ? target : target.FBLocalCollection
+	const prop = target.FBLocalProp
+	if (target.FBLocalCollection && !prop) throw new Error('FBObserver received FBLocalCollection without FBLocalProp.')
+
+	const redraw = options.redrawFn ? options.redrawFn : typeof m != 'undefined' ? m.redraw : () => { 
+		throw new Error("FBObserver needs a valid redraw function")
+	}
+	
+	const condition = options.condition
+	const crudFn = options.crudFn || crud
+	
+	const coll = firebase.firestore().collection(collectionName)
+	const ref = condition ? coll.where(condition[0], condition[1], condition[2]) : coll
+	
+	ref.onSnapshot((snap) => {
+		snap.docChanges.forEach((change) => {
+			(new Promise((resolve) => { (crudFn || crud)(change).then(resolve) }))
+				.then(redraw).catch((e) => console.log(e, 'Your CRUD function must return a promise.'))
+		})
+	})
+	
+	function crud(change) {
+		const id = change.doc.id
+		const data = change.doc.data()
+		const isArray = Array.isArray(targetObj)
+		const existing = isArray ? targetObj.find((obj) => obj.id === id) : targetObj[id]
+
+		switch(change.type) {
+			case 'added':
+				const o = {id: id, data: data}
+				if (isArray) targetObj.push(o)
+				else targetObj[prop || id] = o
+				break
+			case 'modified': {
+				if (existing) {
+					existing.data = data
+					break
+				}
+			}
+			case 'removed': {
+				if (existing) {
+					if (isArray) targetObj.splice(targetObj.indexOf(existing), 1)
+					else delete existing
+				}
+			}
+		}
+		return new Promise(r => r()).then(options.callback)
+	}
+}
+
 
 if (typeof module === 'object') module.exports = FBObserve
 else if (typeof window !== 'undefined') window.FBObserve = FBObserve
