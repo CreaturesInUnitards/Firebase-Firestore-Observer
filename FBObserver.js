@@ -1,7 +1,7 @@
 const FBObserve = (collectionName, target, options) => {
-	const targetObj = typeof target.FBLocalCollection == 'undefined' ? target : target.FBLocalCollection
+	const targetObj = typeof target.FBLocalObject == 'undefined' ? target : target.FBLocalObject
 	const prop = target.FBLocalProp
-	if (target.FBLocalCollection && !prop) throw new Error('FBObserver received FBLocalCollection without FBLocalProp.')
+	if (target.FBLocalObject && !prop) throw new Error('FBObserver received FBLocalObject without FBLocalProp.')
 
 	const redraw = options.redrawFn ? options.redrawFn : typeof m != 'undefined' ? m.redraw : () => { 
 		throw new Error("FBObserver needs a valid redraw function")
@@ -16,7 +16,8 @@ const FBObserve = (collectionName, target, options) => {
 	ref.onSnapshot((snap) => {
 		snap.docChanges.forEach((change) => {
 			(new Promise((resolve) => { (crudFn || crud)(change).then(resolve) }))
-				.then(redraw).catch((e) => console.log(e, 'Your CRUD function must return a promise.'))
+				.then(redraw)
+				.catch((e) => console.log(e, 'Your CRUD function must return a promise.'))
 		})
 	})
 	
@@ -48,7 +49,6 @@ const FBObserve = (collectionName, target, options) => {
 		return new Promise(r => r()).then(options.callback)
 	}
 }
-
 
 if (typeof module === 'object') module.exports = FBObserve
 else if (typeof window !== 'undefined') window.FBObserve = FBObserve
