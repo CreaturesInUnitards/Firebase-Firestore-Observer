@@ -3,7 +3,7 @@ const FBObserve = (collectionName, target, options) => {
 	const prop = target.FBLocalProp
 	if (target.FBLocalObject && !prop) throw new Error('FBObserver received FBLocalObject without FBLocalProp.')
 
-	const redraw = options.redrawFn ? options.redrawFn : typeof m != 'undefined' ? m.redraw : () => { 
+	const redraw = (options && options.redrawFn) ? options.redrawFn : typeof m != 'undefined' ? m.redraw : () => { 
 		throw new Error("FBObserver needs a valid redraw function")
 	}
 	
