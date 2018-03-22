@@ -15,12 +15,10 @@ const FBObserve = (collectionName, target, options) => {
 	
 	ref.onSnapshot((snap) => {
 		snap.docChanges.forEach(change => {
-			if (change) {
-				(new Promise(resolve => { (crudFn || crud)(change).then(resolve) }))
-					.then(options.callback && options.callback.bind(null, change))
-					.then(redraw)
-					.catch((e) => console.log(e, 'Your CRUD function must return a promise.'))
-			}
+			(new Promise(resolve => { (crudFn || crud)(change).then(resolve) }))
+				.then(options.callback && options.callback.bind(null, change))
+				.then(redraw)
+				.catch((e) => console.log(e, 'Your CRUD function must return a promise.'))
 		})
 	})
 	
