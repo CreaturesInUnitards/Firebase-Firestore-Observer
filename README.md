@@ -48,7 +48,7 @@ If the out-of-the-box configuration doesn't fit your needs, you have several opt
 2. If you're not using Mithril, pass a different `redrawFn` to the `options` argument
 3. If you want a `condition` on your query, pass it to `options` as `[ prop, comparison, value ]`
 4. If you want to perform custom operations with the raw firebase data, pass a custom `crudFn` to `options`
-5. You can also pass a nullary callback which will fire after each `crud` operation
+5. You can also pass a callback which will receive the `change` object after each `crud` operation
 
 ```js
 const myBigStateObject = { user: someUser }
@@ -81,7 +81,7 @@ FBObserve(
         redrawFn: myNonMithrilRedrawFn,
         condition: [ 'id', '==', myAlreadyKnownIdOrWhatever ],
         crudFn: crud,
-        callback: () => { console.log("Ok, crud's done, I'm OUTTA HERE.") }
+        callback: change => { console.log(change, "Ok, crud's done, I'm OUTTA HERE.") }
     }
 )
 
