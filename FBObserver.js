@@ -14,10 +14,13 @@ const FBObserve = (collectionName, target, options) => {
 	const ref = condition ? coll.where(condition[0], condition[1], condition[2]) : coll
 	
 	ref.onSnapshot((snap) => {
-		snap.docChanges.forEach((change) => {
-			(new Promise((resolve) => { (crudFn || crud)(change).then(resolve) }))
-				.then(redraw)
-				.catch((e) => console.log(e, 'Your CRUD function must return a promise.'))
+		snap.docChanges.forEach(change => {
+			if (change) {
+				(new Promise(resolve => { (crudFn || crud)(change).then(resolve) }))
+					.then(options.callback && options.callback.bind(null, change))
+					.then(redraw)
+					.catch((e) => console.log(e, 'Your CRUD function must return a promise.'))
+			}
 		})
 	})
 	
@@ -46,7 +49,7 @@ const FBObserve = (collectionName, target, options) => {
 				}
 			}
 		}
-		return new Promise(r => r()).then(options.callback)
+		return new Promise(r => { r() })
 	}
 }
 
