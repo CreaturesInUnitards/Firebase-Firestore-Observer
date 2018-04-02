@@ -2,17 +2,17 @@ const FBObserve = (collectionName, target, options) => {
 	const targetObj = typeof target.FBLocalObject == 'undefined' ? target : target.FBLocalObject
 	const prop = target.FBLocalProp
 	if (target.FBLocalObject && !prop) throw new Error('FBObserver received FBLocalObject without FBLocalProp.')
-
-	const redraw = (options && options.redrawFn) ? options.redrawFn : typeof m != 'undefined' ? m.redraw : () => { 
+	
+	const redraw = (options && options.redrawFn) ? options.redrawFn : typeof m != 'undefined' ? m.redraw : () => {
 		throw new Error("FBObserver needs a valid redraw function")
 	}
-	
+
 	const condition = options.condition
 	const crudFn = options.crudFn || crud
-	
+
 	const coll = firebase.firestore().collection(collectionName)
 	const ref = condition ? coll.where(condition[0], condition[1], condition[2]) : coll
-	
+
 	ref.onSnapshot((snap) => {
 		snap.docChanges.forEach(change => {
 			(new Promise(resolve => { (crudFn || crud)(change).then(resolve) }))
@@ -21,7 +21,7 @@ const FBObserve = (collectionName, target, options) => {
 				.catch((e) => console.log(e, 'Your CRUD function must return a promise.'))
 		})
 	})
-	
+
 	function crud(change) {
 		const id = change.doc.id
 		const data = change.doc.data()
