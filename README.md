@@ -54,7 +54,7 @@ If the out-of-the-box configuration doesn't fit your needs, you have several opt
 const myBigStateObject = { user: someUser }
 
 // set up a crud function which will handle 'added', 'modified', and 'removed', e.g.
-const crud = (change) => {
+const crud = change => {
     const id = change.doc.id
     const data = change.doc.data()
     
@@ -71,7 +71,7 @@ const crud = (change) => {
     }
     
     // must return a promise
-    return new Promise((r) => r()).then(myCustomCallback)
+    return new Promise(r => r()).then(myCustomCallback)
 }
 
 FBObserve(
